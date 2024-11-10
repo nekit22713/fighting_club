@@ -1,0 +1,38 @@
+version: '3.9'
+
+x-default-env-file:
+  &default-env-file
+  env_file:
+    - .env
+
+services:
+  db:
+    <<: *default-env-file
+    image: postgres:17-bookworm
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - db-access
+
+  webapp:
+    <<: *default-env-file
+    build: 
+      context: .
+      dockerfile: ./ci-cd/webapp.Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./webapp:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - db-access
+
+volumes:
+  postgres-data:
+
+networks:
+  db-access:
